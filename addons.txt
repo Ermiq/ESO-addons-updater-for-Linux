@@ -1,0 +1,5 @@
+ADDONS_PATH=/home/alixey/.steam/debian-installation/steamapps/compatdata/306130/pfx/drive_c/users/steamuser/Documents/Elder Scrolls Online/live/AddOns
+TTC_PRICES=https://eu.tamrieltradecentre.com/download/PriceTable
+
+https://www.esoui.com/downloads/info1920-ComingBackHome.html
+https://www.esoui.com/downloads/info7-LibAddonMenu.html
