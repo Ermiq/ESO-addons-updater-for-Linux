@@ -2,30 +2,45 @@
 
 CWD=$(dirname $(realpath $0))
 TMPDIR="/tmp/esoaddons"
-ADDONS_PATH="$TMPDIR"
-TTC_PRICE_TABLE='https://eu.tamrieltradecentre.com/download/PriceTable' # Change to https://us. for NA server prices table.
+ADDONS_PATH="" # Must contain '/AddOns' because the usual ESO addons path is: .../Elder Scrolls Online/live/AddOns
+TTC_PRICE_TABLE="" # If not provided, the 'https://eu.tamrieltradecentre.com/download/PriceTable' will be used
 
 if [[ ! -f "$CWD/addons.txt" ]] || [[ ! -s "$CWD/addons.txt" ]]; then
 	echo "Please add your addons to addons.txt, one per line using the URL from https://www.esoui.com"
 	exit 1
 fi
 
-mkdir -p "$TMPDIR"
-rm -rf "$TMPDIR/*"
+# Read the 'addons.txt' to set up the path to addons and the TTC prices URL provided by the user:
+while read line; do
+	if [[ $line =~ ^ADDONS_PATH= && $line == *"/AddOns" ]]; then
+		ADDONS_PATH=$(echo "$line" | cut -d\= -f2)
+		echo -e "\nAddons path provided:\n"$ADDONS_PATH""
+		continue
+	elif [[ $line =~ ^TTC_PRICES= ]]; then
+		TTC_PRICE_TABLE=$(echo "$line" | cut -d\= -f2)
+		echo -e "\nTTC prices URL provided:\n"$TTC_PRICE_TABLE""
+		continue
+	fi
+done < "$CWD/addons.txt"
+
+if [[ $ADDONS_PATH == "" ]]; then
+	echo -e "\nPut the correct full path to the addons in the game's subfolder to the addons.txt.\nIt must be like this: ADDONS_PATH=/path/to/addons"
+	exit 1
+fi
+
+if [[ $TTC_PRICE_TABLE == "" ]]; then
+	echo -e "\nNo TTC prices URL provided.\nThe default URL (https://eu.tamrieltradecentre.com/download/PriceTable) will be used."
+	TTC_PRICE_TABLE='https://eu.tamrieltradecentre.com/download/PriceTable'
+fi
 
 echo
 
+mkdir -p "$TMPDIR"
+rm -rf "$TMPDIR/*"
+
 # del url name ver dirs
 while read line; do
-	if [[ $line == "" ]]; then
-		continue
-	elif [[ $line =~ ^ADDONS_PATH ]]; then
-		ADDONS_PATH=$(echo "$line" | cut -d\= -f2)
-		echo -e "Addons path:\n"$ADDONS_PATH"\n"
-		continue
-	elif [[ $line =~ ^TTC_PRICES ]]; then
-		TTC_PRICE_TABLE=$(echo "$line" | cut -d\= -f2)
-		echo -e "TTC prices adress:\n"$TTC_PRICE_TABLE"\n"
+	if [[ ! $line =~ ^https:// ]]; then
 		continue
 	fi
 
@@ -62,7 +77,7 @@ while read line; do
 		rm -rf "$ADDONS_PATH/$dir"
 		mv -f "$TMPDIR/$dir" "$ADDONS_PATH/"
 	done
-	# url name ver
+	# Insert 'url name version' to the addon's line:
 	sed -i "s#$line#$AURI $ANAME $RVERS#" "$CWD/addons.txt"
 
 	echo "Updated addon $ANAME"
